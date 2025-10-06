@@ -10,7 +10,7 @@ double vReal[sampleCount];
 double vImag[sampleCount];
 
 const auto micInputPin = 35;
-float dcOfffset = 1.25; //volt
+const float dcOfffset = 1.25; //volt
 const float vrefDB = 0.775;
 
 ArduinoFFT<double> fft = ArduinoFFT<double>();
@@ -30,7 +30,7 @@ const float gains[ledColoumncount] = {0.4, 0.4, 0.5, 0.5, 0.6, 0.6, 0.7, 0.7,
                                      1, 1, 1, 1, 1, 1, 1, 1
                                      };
 
-int displayValues[]={0, 128, 192, 224, 240, 248, 252, 254, 255}; 
+int displayValues[]={0, 1, 3, 7, 15, 31, 63, 127, 255}; 
 const float freqFac = 39; // 0.5* 200000/128
 
 const float dynamicGains[8] = {0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2};
@@ -50,12 +50,11 @@ void CheckGainInput() {
 }
 
 void ProccessGainInput(){
-    interrupt = false;
     gainIndex++;
     if(gainIndex>7){
       gainIndex=0;
     }
-    for (int i = 0; i < ledColoumncount; i++) {
+    for (int i = 0; i <ledColoumncount; i++) {
       ledMatrix.setColumn(i,displayValues[gainIndex+1]);// to show gain level (show from 1 to 8 dots)
     }
 }
@@ -80,26 +79,25 @@ void ShowSpectrum(){
     limitedVal = limitedVal < 0.5 ? 0 : limitedVal;
 
     int displayVal = nearbyintf(limitedVal);
-    ledMatrix.setColumn(31-i,displayValues[displayVal]);
+    ledMatrix.setColumn(i,displayValues[displayVal]);
   }
   //Serial.println("--------");
 }
 
 void setup() {
   delay(1000);
+  ledMatrix.begin(); 
+  delay(1000);
   pinMode(2, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(2), CheckGainInput, FALLING);
   //Serial.begin(115200);
-  ledMatrix.begin(); 
-  delay(1000);
-        
 }
 
 void loop() {
-
   if(interrupt){
     ProccessGainInput();
     delay(500);
+    interrupt = false;
   }
 
   for (int i = 0; i < sampleCount; i++) {
